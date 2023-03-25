@@ -20,7 +20,7 @@ mongoose
   });
 
 // IMPORT AND START APP
-const app = require("./index");
+const app = require("./app");
 app.listen(process.env.PORT, () => {
   if (process.env.NODE_ENV == "dev") {
     console.log(`App Running In Dev Mode on port ${process.env.PORT}`);

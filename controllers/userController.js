@@ -45,7 +45,7 @@ exports.userRegister = async (req, res, next) => {
       email,
       password: encryptedPassword,
     });
-
+    delete newUser.password;
     // Return the created user in the response
     res.status(200).json({
       status: "Success",
@@ -84,11 +84,15 @@ exports.userLogin = async (req, res, next) => {
     // CHECK IF USERNAME/EMAIL ALREADY EXISTS.
     if (userCheck) {
       const passwordVerify = await bcrypt.compare(password, userCheck.password);
+      delete userCheck.password;
       if (passwordVerify) {
         return res.status(201).json({
           status: "Success",
           message: "Logged In",
-          payload: null,
+          payload: {
+            username: userCheck.username,
+            email: userCheck.email,
+          },
         });
       } else {
         return res.status(401).json({

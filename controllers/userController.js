@@ -117,3 +117,50 @@ exports.userLogin = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.userSetAvatar = async (req, res, next) => {
+  try {
+    const requiredFields = ["username","avatar"];
+    const fields = req.body;
+    // MISSING FIELD BACKEND VALIDATION.
+    const missingFields = requiredFields.filter((field) => !fields[field]);
+    if (missingFields.length > 0) {
+      return res.status(401).json({
+        status: "Failed",
+        message: "Please fill in all the required fields.",
+        payload: null,
+      });
+    }
+    const { username, avatar, isAvatarImageSet = true } = req.body;
+    const userCheck = await userModel.findOneAndUpdate(username, {
+      avatarImage: avatar,
+      isAvatarImageSet: true
+    }, {
+      new: true
+    });
+    // CHECK IF USERNAME/EMAIL ALREADY EXISTS.
+    if (userCheck) {
+      return res.status(201).json({
+        status: "Success",
+        message: "Avatar Updated",
+        payload: {
+          isAvatarImageSet: userCheck.isAvatarImageSet,
+          avatarImage: userCheck.avatarImage,
+        },
+      });
+    } else {
+      return res.status(401).json({
+        status: "Failed",
+        message: "Username not found. Please check your username.",
+        payload: null,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: "Failed",
+      message: "Server Error.",
+      payload: error.message,
+    });
+    next(error);
+  }
+};

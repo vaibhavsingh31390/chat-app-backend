@@ -4,9 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 app.use(morgan('dev'));
 
-app.use(cors({
-    origin: '*'
-}));
+app.use(cors());
 app.use(express.json());
 
 const userRoute = require(`${__dirname}/routes/userRoutes`);

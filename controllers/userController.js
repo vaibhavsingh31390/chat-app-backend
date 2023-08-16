@@ -1,6 +1,26 @@
 const userModel = require("./../models/userModel");
 const bcrypt = require("bcrypt");
 const jswebtoken = require("jsonwebtoken");
+const crypto = require('crypto');
+
+const assignToken = async (userName) => {
+  try {
+    const payload = {
+      username: userName,
+      timestamp: Date.now(),
+    };
+    const secretKey = crypto.randomBytes(32).toString("hex");
+    const token = jswebtoken.sign(payload, secretKey);
+    const user = await userModel.findOneAndUpdate(
+      { username: userName },
+      { token: token },
+      { new: true }
+    );
+    return token;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 
 exports.userRegister = async (req, res, next) => {
   try {
@@ -46,15 +66,20 @@ exports.userRegister = async (req, res, next) => {
       password: encryptedPassword,
     });
     delete newUser.password;
-    // Return the created user in the response
-    res.status(200).json({
-      status: "Success",
-      message: "You have been successfully registered!",
-      payload: {
-        username: newUser.username,
-        email: newUser.email,
-      },
-    });
+    const token = await assignToken(newUser.username);
+    if(newUser && token){
+      res.status(200).json({
+        status: "Success",
+        message: "You have been successfully registered!",
+        payload: {
+          username: newUser.username,
+          email: newUser.email,
+          token: token
+        },
+      });
+    }else{
+      next(error);
+    }
   } catch (error) {
     res.status(500).json({
       status: "Failed",
@@ -67,6 +92,9 @@ exports.userRegister = async (req, res, next) => {
 
 exports.userLogin = async (req, res, next) => {
   try {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); // Replace with your actual frontend URL
+    res.header('Access-Control-Allow-Methods', 'POST');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
     const requiredFields = ["email", "password"];
     const fields = req.body;
     // MISSING FIELD BACKEND VALIDATION.
@@ -84,14 +112,16 @@ exports.userLogin = async (req, res, next) => {
     // CHECK IF USERNAME/EMAIL ALREADY EXISTS.
     if (userCheck) {
       const passwordVerify = await bcrypt.compare(password, userCheck.password);
+      const token = await assignToken(userCheck.username);
       delete userCheck.password;
-      if (passwordVerify) {
+      if (passwordVerify && token) {
         return res.status(201).json({
           status: "Success",
           message: "Logged In",
           payload: {
             username: userCheck.username,
             email: userCheck.email,
+            token: token
           },
         });
       } else {
@@ -120,7 +150,7 @@ exports.userLogin = async (req, res, next) => {
 
 exports.userSetAvatar = async (req, res, next) => {
   try {
-    const requiredFields = ["username","avatar"];
+    const requiredFields = ["username","avatar",'token'];
     const fields = req.body;
     // MISSING FIELD BACKEND VALIDATION.
     const missingFields = requiredFields.filter((field) => !fields[field]);
@@ -131,8 +161,8 @@ exports.userSetAvatar = async (req, res, next) => {
         payload: null,
       });
     }
-    const { username, avatar, isAvatarImageSet = true } = req.body;
-    const userCheck = await userModel.findOneAndUpdate(username, {
+    const { username, avatar, isAvatarImageSet = true, token } = req.body;
+    const userCheck = await userModel.findOneAndUpdate({token: {$eq:token}}, {
       avatarImage: avatar,
       isAvatarImageSet: true
     }, {
@@ -148,6 +178,50 @@ exports.userSetAvatar = async (req, res, next) => {
           avatarImage: userCheck.avatarImage,
         },
       });
+    } else {
+      return res.status(401).json({
+        status: "Failed",
+        message: "Username not found. Please check your username.",
+        payload: null,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: "Failed",
+      message: "Server Error.",
+      payload: error.message,
+    });
+    next(error);
+  }
+};
+
+
+exports.userGetUsers = async (req, res, next) => {
+  try {
+    const requiredFields = ["username",'token'];
+    const fields = req.query;
+    // MISSING FIELD BACKEND VALIDATION.
+    const missingFields = requiredFields.filter((field) => !fields[field]);
+    if (missingFields.length > 0) {
+      return res.status(401).json({
+        status: "Failed",
+        message: "Please fill in all the required fields.",
+        payload: null,
+      });
+    }
+    const { username, token } = req.query;
+    const userCheck = await userModel.findOne({token});
+    // CHECK IF USERNAME/EMAIL ALREADY EXISTS.
+    if (userCheck) {
+      const usersList = await userModel.find({token: {$ne:token}}).select("username avatarImage _id");
+      return res.status(201).json({
+        status: "Success",
+        message: "Users Found",
+        payload: {
+          list: usersList
+        },
+      });
+      
     } else {
       return res.status(401).json({
         status: "Failed",

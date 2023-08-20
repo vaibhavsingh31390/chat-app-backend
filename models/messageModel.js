@@ -7,6 +7,10 @@ const messageSchema = new mongoose.Schema(
         required: true,
       },
     },
+    recipient_type:{
+      type: String,
+      required: true
+    },
     users: Array,
     sender: {
       type: mongoose.Schema.Types.ObjectId,

@@ -72,6 +72,7 @@ exports.userRegister = async (req, res, next) => {
         status: "Success",
         message: "You have been successfully registered!",
         payload: {
+          _id: newUser._id,
           username: newUser.username,
           email: newUser.email,
           token: token
@@ -119,6 +120,7 @@ exports.userLogin = async (req, res, next) => {
           status: "Success",
           message: "Logged In",
           payload: {
+            _id: userCheck._id,
             username: userCheck.username,
             email: userCheck.email,
             token: token

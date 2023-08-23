@@ -1,11 +1,9 @@
 const userModel = require("./../models/userModel");
 const messageModel = require("./../models/messageModel");
-const bcrypt = require("bcrypt");
-const jswebtoken = require("jsonwebtoken");
-const crypto = require("crypto");
 
 exports.sendMessage = async (req, res, next) => {
   try {
+    const io = req.app.get('io');
     const requiredFields = ["token", "recipient_type", "from", "to", "message"];
     const fields = req.body;
     const missingFields = requiredFields.filter((field) => !fields[field]);
@@ -33,6 +31,9 @@ exports.sendMessage = async (req, res, next) => {
       });
 
       if (newMessage) {
+        
+        io.emit('SEND_MESSAGE', newMessage);
+
         return res.status(201).json({
           status: "Success",
           message: "Message Sent",

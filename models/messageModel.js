@@ -43,7 +43,7 @@ const messageSchema = new mongoose.Schema(
     status: {
       type: String,
       default: 'sent',
-    },
+    }
   },
   {
     timestamps: true,

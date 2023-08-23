@@ -1,20 +1,48 @@
 const mongoose = require("mongoose");
 const messageSchema = new mongoose.Schema(
   {
+    token: {
+      type: String,
+      required: true,
+    },
     message: {
+      type: {
+        type: String,
+        required: true,
+      },
       text: {
         type: String,
         required: true,
       },
     },
-    recipient_type:{
+    recipient_type: {
       type: String,
-      required: true
+      required: true,
     },
     users: Array,
-    sender: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
+    from: {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+      },
+      username: {
+        type: String,
+        required: this.translateAliases,
+      },
+    },
+    to: {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+      },
+      username: {
+        type: String,
+        required: this.translateAliases,
+      },
+    },
+    status: {
+      type: String,
+      default: 'sent',
     },
   },
   {

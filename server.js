@@ -1,7 +1,7 @@
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-const socketIo = require('socket.io');
-const cors = require('cors');
+const socketIo = require("socket.io");
+const cors = require("cors");
 dotenv.config({ path: "./config/config.env" });
 
 const DB = process.env.DATABASE.replace(
@@ -31,7 +31,7 @@ let server = app.listen(process.env.PORT, () => {
   }
 });
 
-const io = require('./socket')(server);
-app.set('io', io);
+const io = require("./socket")(server);
+app.set("io", io);
 
 module.exports = app;

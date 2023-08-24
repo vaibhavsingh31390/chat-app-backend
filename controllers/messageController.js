@@ -31,9 +31,8 @@ exports.sendMessage = async (req, res, next) => {
       });
 
       if (newMessage) {
-        
         io.emit('SEND_MESSAGE', newMessage);
-
+        
         return res.status(201).json({
           status: "Success",
           message: "Message Sent",

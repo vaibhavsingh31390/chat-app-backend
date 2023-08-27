@@ -21,6 +21,7 @@ module.exports = (server) => {
         let serviceQuery = await messageService.setDelivered(data);
         if (serviceQuery) {
           // console.log(serviceQuery);
+          socket.emit('MSG_DELIVERED_ACK', 'DELIVERED')
         }
       } catch (error) {
         console.log(error);
@@ -32,6 +33,7 @@ module.exports = (server) => {
         let serviceQuery = await messageService.setSeen(data);
         if (serviceQuery) {
           //console.log(serviceQuery);
+          socket.emit('MSG_SEEN', 'SEEN');
         }
       } catch (error) {
         console.log(error);
